@@ -363,7 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # irsdk
-irsdk/
+irsdk/*
 !irsdk/irsdk_client.cpp
 !irsdk/irsdk_client.h 
 !irsdk/irsdk_defines.cpp
