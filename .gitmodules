@@ -2,3 +2,6 @@
 	path = imgui
 	url = https://github.com/ocornut/imgui.git
 	branch = docking
+[submodule "imspinner"]
+	path = imspinner
+	url = https://github.com/dalerank/imspinner.git

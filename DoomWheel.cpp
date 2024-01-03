@@ -1,11 +1,18 @@
 #include "DoomWheel.h"
 
+//#define IMSPINNER_DEMO
+//#define TESTING_IR
+//#define IMGUI_DEMO
+
 #include "imgui.h"
 #include <math.h>
+#include "IRSDK_Handler.h"
+#include "CarWrapper.h"
+#include "imspinner/imspinner.h"
 
 #define PI 3.14159265
 
-void DoomWheel::RenderUI(ImFont *fonts[])
+void DoomWheel::RenderUI(ImFont *fonts[], IRSDK_Handler *irsdk)
 {
     static bool opt_fullscreen = true;
     static bool opt_padding = false;
@@ -79,30 +86,70 @@ void DoomWheel::RenderUI(ImFont *fonts[])
 
         ImGui::EndMenuBar();
     }
+
     ImGui::Begin("DoomWheel - Settings");
     static int main_segments = 64;
     static int car_segments = 15;
     static int car_radius = 15;
-    static float test_car_pos = 0;
-    static bool b_car_filled = true;
     static int car_font_size = 12;
-    static int amnt_car = 1;
     static float lost_time = 30.0f;
     static const char* font_items[] = { "Arial", "Courrier" };
     static int selected_font = 0;
+    static int selected_numbering = 0;
+    static const char* number_items[] = { "Car-Number", "Class Position", "Overall Position" };
+    static bool show_self_class_only = false;
+    static bool b_outcome_transparent = true;
+    static bool b_outcome_first = true;
+    static bool b_outcome_visible = true;
 
     ImGui::Text("Global");
     ImGui::DragInt("Main Segments", &main_segments, 2, 12, 256);
-    ImGui::DragInt("Amount Cars", &amnt_car, 1, 1, 25);
-    ImGui::DragFloat("Sec lost in Pit", &lost_time, .02, 5, 120);
-    ImGui::Combo("Font", &selected_font, font_items, IM_ARRAYSIZE(font_items));
+    ImGui::Checkbox("Only show my class", &show_self_class_only);
+    ImGui::Combo("Number", &selected_numbering, number_items, IM_ARRAYSIZE(number_items));
 
+    ImGui::Separator();
+    ImGui::Text("Pit-Stop");
+    ImGui::DragFloat("Sec lost in Pits", &lost_time, .02, 0, 300);
+    ImGui::Checkbox("Visible", &b_outcome_visible);
+    ImGui::SameLine();
+    ImGui::Checkbox("Transparent", &b_outcome_transparent);
+    ImGui::SameLine();
+    ImGui::Checkbox("On Top", &b_outcome_first);
+
+    ImGui::Separator();
     ImGui::Text("Car Circle");
     ImGui::DragInt("Car Segments", &car_segments, 1, 10, 45);
     ImGui::DragInt("Radius", &car_radius, 1, 5, 70);
-    ImGui::Checkbox("Filled", &b_car_filled);
-    ImGui::DragFloat("Test Car Move", &test_car_pos, .001, 0, 1);
     ImGui::DragInt("Font Size", &car_font_size, 1, 5, 25);
+    ImGui::Combo("Font", &selected_font, font_items, IM_ARRAYSIZE(font_items));
+
+    ImGui::Separator();
+    ImGui::Text("Status");
+    ImGui::SameLine();
+    if (irsdk->is_connected()) {
+        ImGui::TextColored(ImVec4(.1f, .8f, .1f, 1.f), "Connected");
+    }
+    else {
+        ImGui::TextColored(ImVec4(.8f, .1f, .1f, 1.f), "Disconnected... ");
+        ImGui::SameLine();
+        ImSpinner::SpinnerBounceDots("Disc from iRacing", 12.f, 4.f);
+#ifdef IMSPINNER_DEMO
+        ImSpinner::demoSpinners();
+#endif
+    }
+#ifdef TESTING_IR
+    static int chosen_driver = 0;
+    ImGui::DragInt("Car Idx", &chosen_driver, 1, 0, 63);
+    ImGui::Text("On Track: %.3f", irsdk->get_driver(chosen_driver).track_pct);
+    ImGui::Text("In Pit: %d", irsdk->get_driver(chosen_driver).b_on_pitroad);
+    ImGui::Text("Valid: %d", CarWrapper::is_valid(irsdk, chosen_driver));
+    ImGui::Text("R:%d - G:%d - B:%d", irsdk->get_driver(chosen_driver).r,
+        irsdk->get_driver(chosen_driver).g, irsdk->get_driver(chosen_driver).b);
+    ImGui::Text("Color-Raw: %s", irsdk->get_driver(chosen_driver).raw_color);
+    ImGui::Text("Own-Car-Class: %d", irsdk->get_own_class_id());
+#endif
+    // TODO: Remove after testing
+    ImGui::Text("Avg N Laps: %.3f", irsdk->get_estimated_laptime());
     ImGui::End();
 
     ImGui::Begin("DoomWheel - Viewport");
@@ -113,29 +160,71 @@ void DoomWheel::RenderUI(ImFont *fonts[])
     ImGui::GetForegroundDrawList()->AddCircle(win_center, radius,
         IM_COL32(150, 150, 150, 255), main_segments, 3);
 
-    for (int i = 0; i < amnt_car; i++) {
-        // TODO: get pos of CarIdx from iRacing
-        // TODO: get class-color of CarIdx from iRacing
-        // TODO: get car-num of CarIdx from iRacing
-        // TODO: implement lost time signalling
-        ImVec2 car_pos = calc_car_position(win_center, radius, test_car_pos + .07 * i);
-        if (b_car_filled)
-            ImGui::GetForegroundDrawList()->AddCircleFilled(car_pos, car_radius,
-                IM_COL32(185, 35, 35, 255), car_segments);
-        else
-            ImGui::GetForegroundDrawList()->AddCircle(car_pos, car_radius,
-                IM_COL32(185, 35, 35, 255), car_segments, 2);
+    if (b_outcome_visible && b_outcome_first)
+        draw_pit_outcome(lost_time, win_center, radius, car_radius, car_segments,
+            b_outcome_transparent, irsdk);
 
-        ImVec2 car_text_pos = ImVec2(car_pos.x - car_font_size,
-            car_pos.y - car_font_size * .5);
-        ImGui::GetForegroundDrawList()->AddText(fonts[selected_font], car_font_size,
-            car_text_pos, IM_COL32(0, 0, 0, 255), "888");
+    for (int i = 0; i < MAX_DRIVERS; i++) {
+        if (CarWrapper::is_valid(irsdk, i) && CarWrapper::is_in_player_class(irsdk, i, show_self_class_only)) {
+            ImVec2 car_pos = calc_car_position(win_center, radius, CarWrapper::get_cartrackpos(irsdk, i));
+            if (CarWrapper::is_on_pit(irsdk, i))
+                ImGui::GetForegroundDrawList()->AddCircle(car_pos, (float)car_radius,
+                    IM_COL32(CarWrapper::get_class_color_r(irsdk, i), 
+                        CarWrapper::get_class_color_g(irsdk, i),
+                        CarWrapper::get_class_color_b(irsdk, i),
+                        255),
+                    car_segments, 2);
+            else
+                ImGui::GetForegroundDrawList()->AddCircleFilled(car_pos, (float)car_radius,
+                    IM_COL32(CarWrapper::get_class_color_r(irsdk, i),
+                        CarWrapper::get_class_color_g(irsdk, i),
+                        CarWrapper::get_class_color_b(irsdk, i), 
+                        255), 
+                    car_segments);
+
+            ImVec2 car_text_pos = ImVec2(car_pos.x - car_font_size * .5,
+                car_pos.y - car_font_size * .5);
+            char* number = (char*)calloc(4, sizeof(char));
+            switch (selected_numbering) {
+            case 1:
+                sprintf(number, "%d", CarWrapper::get_car_class_pos(irsdk, i));
+                break;
+            case 2:
+                sprintf(number, "%d", CarWrapper::get_car_pos(irsdk, i));
+                break;
+            default:
+                number = CarWrapper::get_car_num(irsdk, i);
+            }
+            ImGui::GetForegroundDrawList()->AddText(fonts[selected_font], car_font_size, car_text_pos, 
+                CarWrapper::is_on_pit(irsdk, i) ? IM_COL32(255, 255, 255, 255) : IM_COL32(0, 0, 0, 255), 
+                number);
+        }
     }
+    if (b_outcome_visible && !b_outcome_first)
+        draw_pit_outcome(lost_time, win_center, radius, car_radius, car_segments,
+            b_outcome_transparent, irsdk);
+    
     ImGui::End();
 
+
+#ifdef IMGUI_DEMO
     ImGui::ShowDemoWindow();
+#endif
 
     ImGui::End();
+}
+
+void DoomWheel::draw_pit_outcome(float lost_time, ImVec2 win_center, int radius,
+    int car_radius, int car_segments, bool b_transparent, IRSDK_Handler* irsdk)
+{
+    if (lost_time > 0.f && irsdk->get_estimated_laptime() > 0
+            && CarWrapper::get_cartrackpos(irsdk, irsdk->get_player_id()) > 0.f) {
+        float lost_pct = lost_time / irsdk->get_estimated_laptime();
+        lost_pct = CarWrapper::get_cartrackpos(irsdk, irsdk->get_player_id()) - lost_pct;
+        ImVec2 car_pos = calc_car_position(win_center, radius, lost_pct);
+        ImGui::GetForegroundDrawList()->AddCircle(car_pos, car_radius,
+            IM_COL32(175, 95, 3, (b_transparent) ? 180 : 255), car_segments, 2);
+    }
 }
 
 ImVec2 DoomWheel::calc_center(ImVec2 pos, ImVec2 size)
@@ -150,7 +239,7 @@ float DoomWheel::calc_radius(ImVec2 size)
 
 ImVec2 DoomWheel::calc_car_position(ImVec2 pos, float radius, float track_pos)
 {
-    float degree = 2 * track_pos * PI;
+    float degree = 2 * track_pos * (float)PI;
     return ImVec2(sin(degree) * radius + pos.x,
         cos(degree) * -radius + pos.y);
 }

@@ -4,7 +4,9 @@
 #include <d3d11.h>
 #include <tchar.h>
 
+#include <thread>
 #include "DoomWheel.h"
+#include "IRSDK_Handler.h"
 
 // Data
 static ID3D11Device* g_pd3dDevice = nullptr;
@@ -19,6 +21,10 @@ void CleanupDeviceD3D();
 void CreateRenderTarget();
 void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+void run_irsdk();
+bool init();
+void run();
 
 // Main code
 int WinMain(
@@ -104,6 +110,12 @@ int WinMain(
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+
+    /* iRacing requirements */
+    IRSDK_Handler* irsdk = new IRSDK_Handler();
+
+    std::thread car_recorder_thread(&IRSDK_Handler::update, irsdk);
+
     // Main loop
     bool done = false;
     while (!done)
@@ -135,7 +147,7 @@ int WinMain(
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        DoomWheel::RenderUI(fonts);
+        DoomWheel::RenderUI(fonts, irsdk);
 
         // Rendering
         ImGui::Render();
@@ -155,7 +167,10 @@ int WinMain(
         //g_pSwapChain->Present(0, 0); // Present without vsync
     }
 
+
     // Cleanup
+    irsdk->kill(); // Setzt nur eine bool auf negativ
+    car_recorder_thread.join(); // Warten bis letzter Durchlauf fertig ist
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
@@ -266,3 +281,4 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
+

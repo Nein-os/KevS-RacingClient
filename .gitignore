@@ -361,3 +361,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# irsdk
+irsdk/
+!irsdk/irsdk_client.cpp
+!irsdk/irsdk_client.h 
+!irsdk/irsdk_defines.cpp
+!irsdk/irsdk_defines.h
+!irsdk/yaml_parser.cpp
+!irsdk/yaml_parser.h
