@@ -120,7 +120,7 @@ void DoomWheel::RenderUI(ImFont *fonts[], IRSDK_Handler *irsdk)
     ImGui::Text("Car Circle");
     ImGui::DragInt("Car Segments", &car_segments, 1, 10, 45);
     ImGui::DragInt("Radius", &car_radius, 1, 5, 70);
-    ImGui::DragInt("Font Size", &car_font_size, 1, 5, 25);
+    ImGui::DragInt("Font Size", &car_font_size, 1, 5, 45);
     ImGui::Combo("Font", &selected_font, font_items, IM_ARRAYSIZE(font_items));
 
     ImGui::Separator();
@@ -159,6 +159,9 @@ void DoomWheel::RenderUI(ImFont *fonts[], IRSDK_Handler *irsdk)
     float radius = calc_radius(win_size);
     ImGui::GetForegroundDrawList()->AddCircle(win_center, radius,
         IM_COL32(150, 150, 150, 255), main_segments, 3);
+    ImVec2 sf_line_tl = ImVec2(win_center.x - 2, win_center.y - radius - 10);
+    ImVec2 sf_line_br = ImVec2(win_center.x + 2, win_center.y - radius + 13);
+    ImGui::GetForegroundDrawList()->AddRectFilled(sf_line_tl, sf_line_br, IM_COL32(215, 0, 0, 255));
 
     if (b_outcome_visible && b_outcome_first)
         draw_pit_outcome(lost_time, win_center, radius, car_radius, car_segments,

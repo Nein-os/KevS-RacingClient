@@ -1,6 +1,6 @@
 #pragma once
 
-#include "irsdk_client.h"
+#include "irsdk/irsdk_client.h"
 
 #define MAX_DRIVERS 64
 

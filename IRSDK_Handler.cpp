@@ -1,6 +1,6 @@
 #include "IRSDK_Handler.h"
 
-#include "yaml_parser.h"
+#include "irsdk/yaml_parser.h"
 #include <thread>
 #include <chrono>
 #include <Windows.h>
