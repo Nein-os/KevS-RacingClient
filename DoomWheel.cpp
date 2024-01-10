@@ -265,10 +265,10 @@ void DoomWheel::draw_pit_outcome(float lost_time, float variance, ImVec2 win_cen
 	int radius, int car_radius, int car_segments, bool b_transparent, 
 	IRSDK_Handler* irsdk)
 {
-	if (lost_time > 0.f /* && CarWrapper::get_cartrackpos(irsdk, irsdk->get_player_id()) > 0.f*/) {
+	if (lost_time > 0.f && CarWrapper::get_cartrackpos(irsdk, irsdk->get_player_id()) > 0.f) {
 		if (variance > 0.f) {
-			float trailing_pct = .98f;//irsdk->get_pct_of_pit_outcome(lost_time + variance);
-			float leading_pct = .025f;//irsdk->get_pct_of_pit_outcome(lost_time - variance);
+			float trailing_pct = irsdk->get_pct_of_pit_outcome(lost_time + variance);
+			float leading_pct = irsdk->get_pct_of_pit_outcome(lost_time - variance);
 			ImVec2 *outcome_dots = (ImVec2*)calloc(car_segments, sizeof(ImVec2));
 			int amnt_dots_around = (car_segments - 4) / 2;
 			float step_size_pct;
