@@ -1,6 +1,7 @@
 #pragma once
 
 #include "irsdk/irsdk_client.h"
+#include <chrono>
 
 #define MAX_DRIVERS 64
 
@@ -20,6 +21,12 @@ typedef struct KevS_Driver_Data {
 	char team_name[64];*/
 } Driver;
 
+typedef struct KevS_Track_Data {
+	float length;
+	float* sectors;
+	int amnt_sectors;
+} Track;
+
 class IRSDK_Handler
 {
 public:
@@ -27,6 +34,9 @@ public:
 
 private:
 	bool running;
+	int last_section_id;
+	std::chrono::steady_clock::time_point last_time_stamp;
+	Track current_track;
 	Driver drivers[MAX_DRIVERS];
 
 	irsdkCVar icv_car_track_pct;
@@ -35,9 +45,15 @@ private:
 	irsdkCVar icv_car_on_pitroad;
 	irsdkCVar icv_own_caridx;
 	irsdkCVar icv_avg_last_laps;
+	irsdkCVar icv_in_car;
 
 	bool init();
 	void run();
+
+	void init_new_track();
+	bool need_reset(float track_length);
+	void reset_track();
+	void update_section_times();
 
 	const char* generateLiveYAMLString();
 	bool processYAMLLiveString();
@@ -54,6 +70,9 @@ public:
 	void kill() { running = false; }
 	int get_player_id(); // Returns 0 on invalid and -1 on not racing
 	float get_estimated_laptime();
+	float get_track_length();
+	int get_amount_sectors() { return current_track.amnt_sectors; }
+	float get_pct_of_pit_outcome(float lost_time);
 
 	Driver get_driver(int i) const { return drivers[i]; }
 };
