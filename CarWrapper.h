@@ -2,7 +2,7 @@
 
 #include "IRSDK_Handler.h"
 
-#define CHECK_VALID(a,b) if (irsdk->get_driver(idx).b_initialized) return (a); else return (b)
+#define CHECK_VALID(a,b) if (irsdk->get_entry(idx).b_initialized) return (a); else return (b)
 
 namespace CarWrapper {
 	bool is_valid(IRSDK_Handler*, int);

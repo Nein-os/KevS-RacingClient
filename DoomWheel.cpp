@@ -9,8 +9,6 @@
 #include "CarWrapper.h"
 #include "imspinner/imspinner.h"
 
-#define PI 3.14159265
-
 struct ExampleAppLog
 {
 	ImGuiTextBuffer     Buf;
@@ -207,7 +205,7 @@ void DoomWheel::RenderUI(ImFont *font, IRSDK_Handler *irsdk)
 		draw_pit_outcome(lost_time, lost_time_variance, win_center, radius, car_radius, car_segments,
 			b_outcome_transparent, irsdk);
 
-	for (int i = 0; i < MAX_DRIVERS; i++) {
+	for (int i = 0; i < MAX_ENTRIES; i++) {
 		if (CarWrapper::is_valid(irsdk, i) && CarWrapper::is_in_player_class(irsdk, i, show_self_class_only)) {
 			ImVec2 car_pos = calc_car_position(win_center, radius, CarWrapper::get_cartrackpos(irsdk, i));
 			if (CarWrapper::is_on_pit(irsdk, i))

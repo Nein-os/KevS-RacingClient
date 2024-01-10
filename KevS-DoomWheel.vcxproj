@@ -151,7 +151,10 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="basics.h" />
     <ClInclude Include="CarWrapper.h" />
+    <ClInclude Include="datatypes\entry.h" />
+    <ClInclude Include="datatypes\track.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_internal.h" />
