@@ -1,7 +1,7 @@
 #include "DoomWheel.h"
 
 //#define IMSPINNER_DEMO
-#define TESTING_IR
+//#define TESTING_IR
 //#define IMGUI_DEMO
 
 #include "imgui.h"
