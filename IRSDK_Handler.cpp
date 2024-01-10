@@ -5,9 +5,13 @@
 #include <chrono>
 #include <Windows.h>
 
+#define SECTOR_LENGTH .05
+
 IRSDK_Handler::IRSDK_Handler()
 {
 	running = true;
+	current_track.sectors = nullptr;
+
 	reset();
 	icv_car_pos = irsdkCVar("CarIdxPosition");
 	icv_car_class_pos = irsdkCVar("CarIdxClassPosition");
@@ -15,6 +19,7 @@ IRSDK_Handler::IRSDK_Handler()
 	icv_car_track_pct = irsdkCVar("CarIdxLapDistPct");
 	icv_own_caridx = irsdkCVar("PlayerCarIdx");
 	icv_avg_last_laps = irsdkCVar("LapLastNLapTime");
+	icv_in_car = irsdkCVar("IsOnTrack");
 }
 
 
@@ -24,7 +29,6 @@ void IRSDK_Handler::update()
 		using namespace std::chrono_literals;
 		while (running) {
 			run();
-			update_driver_data();
 			//std::this_thread::sleep_for(200ms);
 		}
 	}
@@ -46,6 +50,8 @@ void IRSDK_Handler::update_driver_data()
 		else
 			drivers[i].b_initialized = false;
 	}
+	if (current_track.sectors != nullptr)
+		update_section_times();
 }
 
 void IRSDK_Handler::reset()
@@ -57,12 +63,14 @@ void IRSDK_Handler::reset()
 		drivers[i].class_pos = -1;
 		drivers[i].pos = -1;
 	}
+	reset_track();
 }
 
 void IRSDK_Handler::processYAMLSessionString(const char* yaml)
 {
 	char tstr[256];
 	char car_class_str[10];
+	char length[6] = "\0\0\0\0\0";
 	int value;
 	for (int i = 0; i < MAX_DRIVERS; i++) {
 		if (drivers[i].b_initialized) {
@@ -93,6 +101,17 @@ void IRSDK_Handler::processYAMLSessionString(const char* yaml)
 				value = ((color[6] >= 'a') ? color[6] - 'a' + 10 : color[6] - '0') * 16;
 				value += (color[7] >= 'a') ? color[7] - 'a' + 10 : color[7] - '0';
 				drivers[i].b = value;
+			}
+		}
+	}
+	sprintf_s(tstr, "WeekendInfo:TrackLength:");
+	if (parceYAMLString(yaml, tstr, length, 5)) {
+		float track_l = atof(length);
+		if (need_reset(track_l)) {
+			if (track_l > 0) {
+				reset_track();
+				current_track.length = track_l;
+				init_new_track();
 			}
 		}
 	}
@@ -173,6 +192,7 @@ void IRSDK_Handler::run()
 			processYAMLSessionString(irsdkClient::instance().getSessionStr());
 			wasUpdated = true;
 		}
+		update_driver_data();
 	}
 }
 
@@ -184,4 +204,66 @@ int IRSDK_Handler::get_player_id()
 float IRSDK_Handler::get_estimated_laptime()
 {
 	return (irsdkClient::instance().isConnected()) ? icv_avg_last_laps.getFloat() : -1;
+}
+
+float IRSDK_Handler::get_track_length()
+{
+	return current_track.length;
+}
+
+void IRSDK_Handler::init_new_track()
+{
+	float length = get_track_length();
+	int amnt_sectors = (int)(length / SECTOR_LENGTH);
+	if (length == amnt_sectors) {}
+
+	current_track.amnt_sectors = amnt_sectors;
+	current_track.length = length;
+	current_track.sectors = (float*)calloc(amnt_sectors, sizeof(float));
+}
+
+bool IRSDK_Handler::need_reset(float track_length)
+{
+	return track_length != current_track.length;
+}
+
+void IRSDK_Handler::reset_track()
+{
+	if (current_track.sectors != nullptr)
+		delete current_track.sectors;
+	current_track.length = .0f;
+	current_track.amnt_sectors = 0;
+	last_section_id = -1;
+	last_time_stamp = std::chrono::steady_clock::now();
+}
+
+void IRSDK_Handler::update_section_times()
+{
+	int new_id = floor(drivers[get_player_id()].track_pct
+		* current_track.amnt_sectors);
+	if (new_id > 0 && new_id != last_section_id) {
+		last_section_id = new_id;
+		std::chrono::steady_clock::time_point current =
+			std::chrono::steady_clock::now();
+		current_track.sectors[new_id] =
+			std::chrono::duration_cast<std::chrono::milliseconds>
+			(current - last_time_stamp).count() / 1000.0f;
+		last_time_stamp = current;
+	}
+}
+
+float IRSDK_Handler::get_pct_of_pit_outcome(float lost_time)
+{
+	int calc_id = last_section_id;
+	float calced_time = .0f;
+	float calced_pct = .0f;
+	if (icv_in_car.getBool() && current_track.sectors[2] > .0f) {
+		while (calced_time < lost_time) {
+			if (calc_id == 0)
+				calc_id = get_amount_sectors();
+			calced_time += current_track.sectors[--calc_id];
+		}
+		calced_pct = calc_id * 1.0f / get_amount_sectors();
+	}
+	return calced_pct;
 }

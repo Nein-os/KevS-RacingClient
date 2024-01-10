@@ -1,6 +1,6 @@
 #pragma once
 
-class IRSDK_Handler;
+#include "IRSDK_Handler.h"
 
 #define CHECK_VALID(a,b) if (irsdk->get_driver(idx).b_initialized) return (a); else return (b)
 
