@@ -1,6 +1,7 @@
 #pragma once
 
 #include "imgui.h"
+#include "IRSDK_Handler.h"
 
 class IRSDK_Handler;
 
