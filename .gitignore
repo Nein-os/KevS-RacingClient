@@ -372,4 +372,5 @@ irsdk/*
 !irsdk/yaml_parser.h
 
 # imgui
-imgui.ini
+./imgui.ini
+*/imgui.ini
