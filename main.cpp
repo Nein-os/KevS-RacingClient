@@ -7,7 +7,7 @@
 #include <thread>
 #include "basics.h"
 #include "DoomWheel.h"
-#include "IRSDK_Handler.h"
+#include "Data_Handler.h"
 
 // Data
 static ID3D11Device* g_pd3dDevice = nullptr;

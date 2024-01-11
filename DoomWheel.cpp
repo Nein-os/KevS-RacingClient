@@ -1,9 +1,6 @@
 #include "DoomWheel.h"
 
-//#define IMSPINNER_DEMO
-//#define TESTING_IR
-//#define IMGUI_DEMO
-
+#include "basics.h"
 #include "imgui.h"
 #include <math.h>
 #include "CarWrapper.h"

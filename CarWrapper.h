@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IRSDK_Handler.h"
+#include "Data_Handler.h"
 
 #define CHECK_VALID(a,b) if (irsdk->get_entry(idx).b_initialized) return (a); else return (b)
 

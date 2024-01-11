@@ -1,11 +1,13 @@
-#include "IRSDK_Handler.h"
+#include "Data_Handler.h"
+#include "basics.h"
+#include "imgui.h"
 
-#include "irsdk/yaml_parser.h"
+#ifdef USED_API_IRACING
+	#include "irsdk/yaml_parser.h"
+#endif
 #include <thread>
 #include <chrono>
 #include <Windows.h>
-
-#define SECTOR_LENGTH .05
 
 IRSDK_Handler::IRSDK_Handler()
 {
@@ -13,6 +15,7 @@ IRSDK_Handler::IRSDK_Handler()
 	current_track.sectors = nullptr;
 
 	reset();
+#ifdef USED_API_IRACING
 	icv_car_pos = irsdkCVar("CarIdxPosition");
 	icv_car_class_pos = irsdkCVar("CarIdxClassPosition");
 	icv_car_on_pitroad = irsdkCVar("CarIdxOnPitRoad");
@@ -20,20 +23,24 @@ IRSDK_Handler::IRSDK_Handler()
 	icv_own_caridx = irsdkCVar("PlayerCarIdx");
 	icv_avg_last_laps = irsdkCVar("LapLastNLapTime");
 	icv_in_car = irsdkCVar("IsOnTrack");
+#endif
 }
 
 
 void IRSDK_Handler::update()
 {
-	if (init()) {
+	if (!init()) {
 		using namespace std::chrono_literals;
 		while (running) {
 			run();
+			// Till now, it doesnt seem to be needed
 			//std::this_thread::sleep_for(200ms);
 		}
 	}
 	else {
 		// TODO: Error Message
+		// Not possible to use a modal
+		// TODO: Create whole logging-system
 	}
 }
 

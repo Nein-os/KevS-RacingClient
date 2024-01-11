@@ -12,12 +12,13 @@ public:
 	IRSDK_Handler();
 
 private:
-	bool running;
+	bool running; 
 	int last_section_id;
 	std::chrono::steady_clock::time_point last_time_stamp;
 	Track current_track;
 	Entry entries[MAX_ENTRIES];
 
+#ifdef USED_API_IRACING
 	irsdkCVar icv_car_track_pct;
 	irsdkCVar icv_car_pos;
 	irsdkCVar icv_car_class_pos;
@@ -25,6 +26,7 @@ private:
 	irsdkCVar icv_own_caridx;
 	irsdkCVar icv_avg_last_laps;
 	irsdkCVar icv_in_car;
+#endif
 
 	bool init();
 	void run();
