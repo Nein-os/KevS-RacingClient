@@ -5,10 +5,9 @@
 #include <tchar.h>
 
 #include <thread>
+#include "basics.h"
 #include "DoomWheel.h"
-#include "IRSDK_Handler.h"
-
-#define KEVS_VERSION "v0.1.0"
+#include "Data_Handler.h"
 
 // Data
 static ID3D11Device* g_pd3dDevice = nullptr;
