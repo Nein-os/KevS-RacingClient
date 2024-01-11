@@ -1,11 +1,12 @@
-#include "IRSDK_Handler.h"
+#include "Data_Handler.h"
+#include "basics.h"
 
-#include "irsdk/yaml_parser.h"
+#ifdef USED_API_IRACING
+	#include "irsdk/yaml_parser.h"
+#endif
 #include <thread>
 #include <chrono>
 #include <Windows.h>
-
-#define SECTOR_LENGTH .05
 
 IRSDK_Handler::IRSDK_Handler()
 {
@@ -13,6 +14,7 @@ IRSDK_Handler::IRSDK_Handler()
 	current_track.sectors = nullptr;
 
 	reset();
+#ifdef USED_API_IRACING
 	icv_car_pos = irsdkCVar("CarIdxPosition");
 	icv_car_class_pos = irsdkCVar("CarIdxClassPosition");
 	icv_car_on_pitroad = irsdkCVar("CarIdxOnPitRoad");
@@ -20,6 +22,7 @@ IRSDK_Handler::IRSDK_Handler()
 	icv_own_caridx = irsdkCVar("PlayerCarIdx");
 	icv_avg_last_laps = irsdkCVar("LapLastNLapTime");
 	icv_in_car = irsdkCVar("IsOnTrack");
+#endif
 }
 
 
@@ -29,26 +32,29 @@ void IRSDK_Handler::update()
 		using namespace std::chrono_literals;
 		while (running) {
 			run();
+			// Till now, it doesnt seem to be needed
 			//std::this_thread::sleep_for(200ms);
 		}
 	}
 	else {
 		// TODO: Error Message
+		// Not possible to use a modal
+		// TODO: Create whole logging-system
 	}
 }
 
 void IRSDK_Handler::update_driver_data()
 {
-	for (int i = 0; i < MAX_DRIVERS; i++) {
+	for (int i = 0; i < MAX_ENTRIES; i++) {
 		if (icv_car_pos.getInt(i) > 0) {
-			drivers[i].b_on_pitroad = icv_car_on_pitroad.getBool(i);
-			drivers[i].pos = icv_car_pos.getInt(i);
-			drivers[i].class_pos = icv_car_class_pos.getInt(i);
-			drivers[i].track_pct = icv_car_track_pct.getFloat(i);
-			drivers[i].b_initialized = true;
+			entries[i].b_on_pitroad = icv_car_on_pitroad.getBool(i);
+			entries[i].pos = icv_car_pos.getInt(i);
+			entries[i].class_pos = icv_car_class_pos.getInt(i);
+			entries[i].track_pct = icv_car_track_pct.getFloat(i);
+			entries[i].b_initialized = true;
 		}
 		else
-			drivers[i].b_initialized = false;
+			entries[i].b_initialized = false;
 	}
 	if (current_track.sectors != nullptr)
 		update_section_times();
@@ -56,12 +62,12 @@ void IRSDK_Handler::update_driver_data()
 
 void IRSDK_Handler::reset()
 {
-	for (int i = 0; i < MAX_DRIVERS; i++) {
-		drivers[i].b_initialized = false;
+	for (int i = 0; i < MAX_ENTRIES; i++) {
+		entries[i].b_initialized = false;
 		for (int k = 0; k < 4; k++)
-			drivers[i].num[k] = '\0';
-		drivers[i].class_pos = -1;
-		drivers[i].pos = -1;
+			entries[i].num[k] = '\0';
+		entries[i].class_pos = -1;
+		entries[i].pos = -1;
 	}
 	reset_track();
 }
@@ -72,35 +78,35 @@ void IRSDK_Handler::processYAMLSessionString(const char* yaml)
 	char car_class_str[10];
 	char length[6] = "\0\0\0\0\0";
 	int value;
-	for (int i = 0; i < MAX_DRIVERS; i++) {
-		if (drivers[i].b_initialized) {
+	for (int i = 0; i < MAX_ENTRIES; i++) {
+		if (entries[i].b_initialized) {
 			char color[9];
 			// skip the rest if carIdx not found
 			sprintf_s(tstr, "DriverInfo:Drivers:CarIdx:{%d}", i);
-			if (parceYAMLInt(yaml, tstr, &(drivers[i].pos))) {
+			if (parceYAMLInt(yaml, tstr, &(entries[i].pos))) {
 				sprintf_s(tstr, "DriverInfo:Drivers:CarIdx:{%d}CarNumber:", i);
-				parceYAMLString(yaml, tstr, drivers[i].num, 3); // 3 changed from 'sizeof(drivers[i].num)-1'
+				parceYAMLString(yaml, tstr, entries[i].num, 3); // 3 changed from 'sizeof(drivers[i].num)-1'
 				sprintf_s(tstr, "DriverInfo:Drivers:CarIdx:{%d}CarClassColor:", i);
 				parceYAMLString(yaml, tstr, color, 9);
 				sprintf_s(tstr, "DriverInfo:Drivers:CarIdx:{%d}CarClassID:", get_player_id());
 				parceYAMLString(yaml, tstr, car_class_str, 10);
 #ifdef TESTING_IR
 				for (int j = 0; j < 8; j++)
-					drivers[i].raw_color[j] = color[j];
-				drivers[i].raw_color[8] = '\0';
+					entries[i].raw_color[j] = color[j];
+				entries[i].raw_color[8] = '\0';
 #endif
 
-				drivers[i].car_class = atoi(car_class_str);
+				entries[i].car_class = atoi(car_class_str);
 				value = 0;
 				value = ((color[2] >= 'a') ? color[2] - 'a' + 10 : color[2] - '0') * 16;
 				value += (color[3] >= 'a') ? color[3] - 'a' + 10 : color[3] - '0';
-				drivers[i].r = value; value = 0;
+				entries[i].r = value; value = 0;
 				value = ((color[4] >= 'a') ? color[4] - 'a' + 10 : color[4] - '0') * 16;
 				value += (color[5] >= 'a') ? color[5] - 'a' + 10 : color[5] - '0';
-				drivers[i].g = value; value = 0;
+				entries[i].g = value; value = 0;
 				value = ((color[6] >= 'a') ? color[6] - 'a' + 10 : color[6] - '0') * 16;
 				value += (color[7] >= 'a') ? color[7] - 'a' + 10 : color[7] - '0';
-				drivers[i].b = value;
+				entries[i].b = value;
 			}
 		}
 	}
@@ -239,7 +245,7 @@ void IRSDK_Handler::reset_track()
 
 void IRSDK_Handler::update_section_times()
 {
-	int new_id = floor(drivers[get_player_id()].track_pct
+	int new_id = floor(entries[get_player_id()].track_pct
 		* current_track.amnt_sectors);
 	if (new_id > 0 && new_id != last_section_id) {
 		last_section_id = new_id;

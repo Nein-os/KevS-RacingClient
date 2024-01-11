@@ -147,11 +147,14 @@
     <ClCompile Include="irsdk\irsdk_client.cpp" />
     <ClCompile Include="irsdk\irsdk_defines.cpp" />
     <ClCompile Include="irsdk\yaml_parser.cpp" />
-    <ClCompile Include="IRSDK_Handler.cpp" />
+    <ClCompile Include="Data_Handler.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="basics.h" />
     <ClInclude Include="CarWrapper.h" />
+    <ClInclude Include="datatypes\entry.h" />
+    <ClInclude Include="datatypes\track.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_internal.h" />
@@ -162,7 +165,7 @@
     <ClInclude Include="irsdk\irsdk_client.h" />
     <ClInclude Include="irsdk\irsdk_defines.h" />
     <ClInclude Include="irsdk\yaml_parser.h" />
-    <ClInclude Include="IRSDK_Handler.h" />
+    <ClInclude Include="Data_Handler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
