@@ -28,7 +28,7 @@ IRSDK_Handler::IRSDK_Handler()
 
 void IRSDK_Handler::update()
 {
-	if (!init()) {
+	if (init()) {
 		using namespace std::chrono_literals;
 		while (running) {
 			run();
