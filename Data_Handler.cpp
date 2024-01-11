@@ -1,6 +1,5 @@
 #include "Data_Handler.h"
 #include "basics.h"
-#include "imgui.h"
 
 #ifdef USED_API_IRACING
 	#include "irsdk/yaml_parser.h"
