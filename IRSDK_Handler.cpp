@@ -2,6 +2,7 @@
 
 #include "irsdk/yaml_parser.h"
 #include <thread>
+#include <cmath>
 #include <chrono>
 #include <Windows.h>
 
@@ -68,7 +69,7 @@ void IRSDK_Handler::reset()
 
 void IRSDK_Handler::processYAMLSessionString(const char* yaml)
 {
-	char tstr[256];
+	wchar_t tstr[256];
 	char car_class_str[10];
 	char length[6] = "\0\0\0\0\0";
 	int value;
@@ -76,14 +77,14 @@ void IRSDK_Handler::processYAMLSessionString(const char* yaml)
 		if (drivers[i].b_initialized) {
 			char color[9];
 			// skip the rest if carIdx not found
-			sprintf_s(tstr, "DriverInfo:Drivers:CarIdx:{%d}", i);
-			if (parceYAMLInt(yaml, tstr, &(drivers[i].pos))) {
-				sprintf_s(tstr, "DriverInfo:Drivers:CarIdx:{%d}CarNumber:", i);
-				parceYAMLString(yaml, tstr, drivers[i].num, 3); // 3 changed from 'sizeof(drivers[i].num)-1'
-				sprintf_s(tstr, "DriverInfo:Drivers:CarIdx:{%d}CarClassColor:", i);
-				parceYAMLString(yaml, tstr, color, 9);
-				sprintf_s(tstr, "DriverInfo:Drivers:CarIdx:{%d}CarClassID:", get_player_id());
-				parceYAMLString(yaml, tstr, car_class_str, 10);
+			swprintf(tstr, L"DriverInfo:Drivers:CarIdx:{%d}", i);
+			if (parceYAMLInt(yaml, (char*)tstr, &(drivers[i].pos))) {
+				swprintf(tstr, L"DriverInfo:Drivers:CarIdx:{%d}CarNumber:", i);
+				parceYAMLString(yaml, (char*)tstr, drivers[i].num, 3); // 3 changed from 'sizeof(drivers[i].num)-1'
+				swprintf(tstr, L"DriverInfo:Drivers:CarIdx:{%d}CarClassColor:", i);
+				parceYAMLString(yaml, (char*)tstr, color, 9);
+				swprintf(tstr, L"DriverInfo:Drivers:CarIdx:{%d}CarClassID:", get_player_id());
+				parceYAMLString(yaml, (char*)tstr, car_class_str, 10);
 #ifdef TESTING_IR
 				for (int j = 0; j < 8; j++)
 					drivers[i].raw_color[j] = color[j];
@@ -104,8 +105,8 @@ void IRSDK_Handler::processYAMLSessionString(const char* yaml)
 			}
 		}
 	}
-	sprintf_s(tstr, "WeekendInfo:TrackLength:");
-	if (parceYAMLString(yaml, tstr, length, 5)) {
+	swprintf(tstr, L"WeekendInfo:TrackLength:");
+	if (parceYAMLString(yaml, (char*)tstr, length, 5)) {
 		float track_l = atof(length);
 		if (need_reset(track_l)) {
 			if (track_l > 0) {
@@ -239,7 +240,9 @@ void IRSDK_Handler::reset_track()
 
 void IRSDK_Handler::update_section_times()
 {
-	int new_id = floor(drivers[get_player_id()].track_pct
+	// NOTE: ::floor anstatt std::floor, weil bug im GNU-C-Compiler... 
+	//		keine Fragen bitte
+	int new_id = ::floor(drivers[get_player_id()].track_pct
 		* current_track.amnt_sectors);
 	if (new_id > 0 && new_id != last_section_id) {
 		last_section_id = new_id;

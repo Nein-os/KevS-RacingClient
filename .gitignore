@@ -374,3 +374,7 @@ irsdk/*
 # imgui
 /**/imgui.ini
 /imgui.ini
+
+build/
+CMake/
+.vscode/
