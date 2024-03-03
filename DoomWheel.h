@@ -1,9 +1,7 @@
 #pragma once
 
 #include "imgui.h"
-#include "IRSDK_Handler.h"
-
-class IRSDK_Handler;
+#include "Data_Handler.h"
 
 class DoomWheel
 {

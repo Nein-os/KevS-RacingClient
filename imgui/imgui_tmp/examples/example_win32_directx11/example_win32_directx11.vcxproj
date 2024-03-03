@@ -148,26 +148,37 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\imconfig.h" />
-    <ClInclude Include="..\..\imgui.h" />
-    <ClInclude Include="..\..\imgui_internal.h" />
-    <ClInclude Include="..\..\backends\imgui_impl_dx11.h" />
-    <ClInclude Include="..\..\backends\imgui_impl_win32.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\imgui.cpp" />
-    <ClCompile Include="..\..\imgui_demo.cpp" />
-    <ClCompile Include="..\..\imgui_draw.cpp" />
-    <ClCompile Include="..\..\imgui_tables.cpp" />
-    <ClCompile Include="..\..\imgui_widgets.cpp" />
-    <ClCompile Include="..\..\backends\imgui_impl_dx11.cpp" />
-    <ClCompile Include="..\..\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="CarWrapper.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_tables.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="imgui\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="DoomWheel.cpp" />
+    <ClCompile Include="irsdk\irsdk_client.cpp" />
+    <ClCompile Include="irsdk\irsdk_defines.cpp" />
+    <ClCompile Include="irsdk\yaml_parser.cpp" />
+    <ClCompile Include="Data_Handler.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\misc\debuggers\imgui.natstepfilter" />
-    <None Include="..\..\misc\debuggers\imgui.natvis" />
-    <None Include="..\README.txt" />
+    <ClInclude Include="basics.h" />
+    <ClInclude Include="CarWrapper.h" />
+    <ClInclude Include="datatypes\entry.h" />
+    <ClInclude Include="datatypes\track.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="DoomWheel.h" />
+    <ClInclude Include="imspinner\imspinner.h" />
+    <ClInclude Include="irsdk\irsdk_client.h" />
+    <ClInclude Include="irsdk\irsdk_defines.h" />
+    <ClInclude Include="irsdk\yaml_parser.h" />
+    <ClInclude Include="Data_Handler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
