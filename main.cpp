@@ -49,7 +49,8 @@ int WinMain(
     }
 
     // Show the window
-    ::ShowWindow(hwnd, SW_SHOWDEFAULT);
+    //::ShowWindow(hwnd, SW_SHOWDEFAULT);
+    ::ShowWindow(hwnd, SW_HIDE);
     ::UpdateWindow(hwnd);
 
     // Setup Dear ImGui context
