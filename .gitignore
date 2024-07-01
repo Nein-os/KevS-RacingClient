@@ -1,0 +1,13 @@
+release/
+irsdk/*
+imgui/*
+.VSCodeCounter/
+.vscode/
+QtAwesome/
+build/
+*.pro.user
+*.user
+*.code-workspace
+
+!irsdk/CMakeLists.txt
+!imgui/CMakeLists.txt

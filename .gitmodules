@@ -1,0 +1,9 @@
+[submodule "imspinner"]
+	path = imspinner
+	url = https://github.com/dalerank/imspinner.git
+[submodule "implot"]
+	path = implot
+	url = https://github.com/epezent/implot.git
+[submodule "glfw"]
+	path = glfw
+	url = https://github.com/glfw/glfw.git
