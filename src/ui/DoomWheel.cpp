@@ -10,6 +10,8 @@
 #include "imspinner.h"
 #include "irsdk_client.h"
 #include "defines.h"
+#include "connection/data_collector.h"
+#include "connection/iracing_collector.h"
 
 #define PI 3.14159265
 
@@ -40,7 +42,7 @@ struct ExampleAppLog
 	}
 };
 
-void DoomWheel::RenderUI(ImFont *font/*, IRSDK_Handler *irsdk*/)
+void DoomWheel::RenderUI(ImFont *font, IKevS_DataCollector *data)
 {
 	static bool opt_fullscreen = true;
 	static bool opt_padding = false;
@@ -77,7 +79,7 @@ void DoomWheel::RenderUI(ImFont *font/*, IRSDK_Handler *irsdk*/)
 	// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
 	if (!opt_padding)
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	ImGui::Begin("KevS", nullptr, window_flags);
+	ImGui::Begin("KevS-Teest", nullptr, window_flags);
 	if (!opt_padding)
 		ImGui::PopStyleVar();
 
@@ -139,26 +141,28 @@ void DoomWheel::RenderUI(ImFont *font/*, IRSDK_Handler *irsdk*/)
 	ImVec2 sf_line_tl = ImVec2(win_center.x - 2, win_center.y - radius - 10);
 	ImVec2 sf_line_br = ImVec2(win_center.x + 2, win_center.y - radius + 13);
 	ImGui::GetForegroundDrawList()->AddRectFilled(sf_line_tl, sf_line_br, IM_COL32(215, 0, 0, 255));
-
-	/*if (b_outcome_visible && !b_outcome_on_top) 
+	// TODO
+	if (b_outcome_visible && !b_outcome_on_top) 
 		draw_pit_outcome(lost_time, lost_time_variance, win_center, radius, car_radius, car_segments,
-			b_outcome_transparent, irsdk);*/
-
+			b_outcome_transparent, data);
+			
 	for (int i = 0; i < MAX_TEAMS_IN_SESSION; i++) {
-		/*if (CarWrapper::is_valid(irsdk, i) && CarWrapper::is_in_player_class(irsdk, i, show_self_class_only)) {
-			ImVec2 car_pos = calc_car_position(win_center, radius, CarWrapper::get_cartrackpos(irsdk, i));
-			if (CarWrapper::is_on_pit(irsdk, i))
+		// TODO: Check if driver is in class and print if needed
+		// TODO: get_car_pos leads to crash is_connected is fine
+		if (data->get_car_pos(i) > 0 && (!show_self_class_only || data->get_class(i) == data->get_own_class())) {
+			ImVec2 car_pos = calc_car_position(win_center, radius, data->get_car_pos(i));
+			if (data->is_on_pitroad(i))
 				ImGui::GetForegroundDrawList()->AddCircle(car_pos, (float)car_radius,
-					IM_COL32(CarWrapper::get_class_color_r(irsdk, i), 
-						CarWrapper::get_class_color_g(irsdk, i),
-						CarWrapper::get_class_color_b(irsdk, i),
+					IM_COL32(data->get_class_colour_r(i), 
+						data->get_class_colour_g(i),
+						data->get_class_colour_b(i),
 						255),
 					car_segments, 2);
 			else
 				ImGui::GetForegroundDrawList()->AddCircleFilled(car_pos, (float)car_radius,
-					IM_COL32(CarWrapper::get_class_color_r(irsdk, i),
-						CarWrapper::get_class_color_g(irsdk, i),
-						CarWrapper::get_class_color_b(irsdk, i), 
+					IM_COL32(data->get_class_colour_r(i),
+						data->get_class_colour_g(i),
+						data->get_class_colour_b(i), 
 						255), 
 					car_segments);
 
@@ -167,18 +171,18 @@ void DoomWheel::RenderUI(ImFont *font/*, IRSDK_Handler *irsdk*/)
 			char* number = (char*)calloc(4, sizeof(char));
 			switch (selected_numbering) {
 			case 1:
-				sprintf(number, "%d", CarWrapper::get_car_class_pos(irsdk, i));
+				sprintf(number, "%d", data->get_class_place(i));
 				break;
 			case 2:
-				sprintf(number, "%d", CarWrapper::get_car_pos(irsdk, i));
+				sprintf(number, "%d", data->get_overall_place(i));
 				break;
 			default:
-				number = CarWrapper::get_car_num(irsdk, i);
+				number = data->get_number(i);
 			}
 			ImGui::GetForegroundDrawList()->AddText(font, car_font_size, car_text_pos, 
-				CarWrapper::is_on_pit(irsdk, i) ? IM_COL32(255, 255, 255, 255) : IM_COL32(0, 0, 0, 255), 
+				data->is_on_pitroad(i) ? IM_COL32(255, 255, 255, 255) : IM_COL32(0, 0, 0, 255), 
 				number);
-		}*/
+		}
 	}
 	/*if (b_outcome_visible && b_outcome_on_top)
 		draw_pit_outcome(lost_time, lost_time_variance, win_center, radius, car_radius, car_segments,
@@ -199,7 +203,7 @@ void DoomWheel::RenderUI(ImFont *font/*, IRSDK_Handler *irsdk*/)
 
 void DoomWheel::draw_pit_outcome(float lost_time, float variance, ImVec2 win_center, 
 	int radius, int car_radius, int car_segments, bool b_transparent, 
-	IRSDK_Handler* irsdk)
+	IKevS_DataCollector *data)
 {
 	/*if (lost_time > 0.f && CarWrapper::get_cartrackpos(irsdk, irsdk->get_player_id()) > 0.f) {
 		if (variance > 0.f) {

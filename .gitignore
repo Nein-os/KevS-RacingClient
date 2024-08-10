@@ -9,5 +9,7 @@ build/
 *.user
 *.code-workspace
 
+*.obj*
+
 !irsdk/CMakeLists.txt
 !imgui/CMakeLists.txt

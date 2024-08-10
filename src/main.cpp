@@ -24,9 +24,9 @@
 #include <thread>
 
 #include "services.h"
-#include "ui/DoomWheel.h"
-#include "ui/Settings.h"
+#include "ui/UI_Handler.h"
 #include "connection/data_collector.h"
+#include "connection/iracing_collector.h"
 
 // Volk headers
 #ifdef IMGUI_IMPL_VULKAN_USE_VOLK
@@ -61,7 +61,7 @@ static ImGui_ImplVulkanH_Window g_MainWindowData;
 static int                      g_MinImageCount = 2;
 static bool                     g_SwapChainRebuild = false;
 
-IKevS_Session *current_session;
+KevS_Session *current_session;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -481,9 +481,17 @@ int main(int, char**)
 	IM_ASSERT(main_font != nullptr);
 
 	bool run = true;
-	IKevS_DataCollector *data_collector;
-	std::thread ir_con(run_iracing_connection, &run);
-	//parseYaml(irsdkClient::instance().getSessionStr(), q_amnt_entries, a_amnt_entries, &len);
+	IKevS_DataCollector *data_collector = nullptr;
+	#if IRACING_USAGE == KEVS_USAGE_TYPE
+		data_collector = new KevS_iRacing_Collector();
+	#elif SECRET_USAGE == KEVS_USAGE_TYPE
+		// TODO
+	#else 
+		// TODO
+		printf("Test");
+	#endif
+	IM_ASSERT(data_collector != nullptr);
+	std::thread ir_con(run_connection, data_collector, &run);
 
 	// Our state
 	bool show_demo_window = true;
@@ -515,9 +523,8 @@ int main(int, char**)
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-
-		Settings::RenderUI(main_font);
-		DoomWheel::RenderUI(main_font);
+		if (data_collector)
+			UI_Handler::RenderWholeUI(main_font, data_collector);
 
 		// Rendering
 		ImGui::Render();

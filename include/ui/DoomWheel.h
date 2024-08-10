@@ -2,19 +2,18 @@
 #define DOOMHWEEL_H
 
 #include "imgui.h"
-//#include "IRSDK_Handler.h"
 
-class IRSDK_Handler;
+class IKevS_DataCollector;
 
 class DoomWheel
 {
 public:
-	static void RenderUI(ImFont *font/*, IRSDK_Handler *irsdk*/);
+	static void RenderUI(ImFont *font, IKevS_DataCollector *data);
 
 private:
     static void draw_pit_outcome(float lost_time, float variance, ImVec2 win_center, 
         int radius, int car_radius, int car_segments, bool b_transparent, 
-        IRSDK_Handler* irsdk);
+        IKevS_DataCollector *data);
 
     static ImVec2 calc_center(ImVec2 pos, ImVec2 size);
     static ImVec2 calc_right_bottom_corner(ImVec2 pos, ImVec2 size);
