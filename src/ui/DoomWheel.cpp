@@ -44,29 +44,6 @@ struct ExampleAppLog
 
 void DoomWheel::RenderUI(ImFont *font, IKevS_DataCollector *data, DoomSettings *doom_wheel)
 {
-	/*if (ImGui::BeginMenuBar())
-	{
-		if (ImGui::BeginMenu("Options"))
-		{
-			// Disabling fullscreen would allow the window to be moved to the front of other windows,
-			// which we can't undo at the moment without finer window depth/z control.
-			ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
-			ImGui::MenuItem("Padding", NULL, &opt_padding);
-			ImGui::Separator();
-
-			if (ImGui::MenuItem("Flag: NoDockingOverCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingOverCentralNode) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingOverCentralNode; }
-			if (ImGui::MenuItem("Flag: NoDockingSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingSplit) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingSplit; }
-			if (ImGui::MenuItem("Flag: NoUndocking", "", (dockspace_flags & ImGuiDockNodeFlags_NoUndocking) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoUndocking; }
-			if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoResize; }
-			if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar; }
-			if (ImGui::MenuItem("Flag: PassthruCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0, opt_fullscreen)) { dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode; }
-			ImGui::Separator();
-			ImGui::EndMenu();
-		}
-
-		ImGui::EndMenuBar();
-	}*/
-	
 	ImGui::Begin("DoomWheel - Viewport");
 	ImVec2 win_pos = ImGui::GetWindowPos();
 	ImVec2 win_size = ImGui::GetWindowSize();
@@ -77,7 +54,7 @@ void DoomWheel::RenderUI(ImFont *font, IKevS_DataCollector *data, DoomSettings *
 	ImVec2 sf_line_tl = ImVec2(win_center.x - 2, win_center.y - radius - 10);
 	ImVec2 sf_line_br = ImVec2(win_center.x + 2, win_center.y - radius + 13);
 	ImGui::GetForegroundDrawList()->AddRectFilled(sf_line_tl, sf_line_br, IM_COL32(215, 0, 0, 255));
-	// TODO
+	
 	if (doom_wheel->b_outcome_visible && !doom_wheel->b_outcome_on_top) 
 		_draw_pit_outcome(doom_wheel->lost_time, doom_wheel->lost_time_variance, win_center, radius, doom_wheel->car_radius, doom_wheel->car_segments,
 			doom_wheel->b_outcome_transparent, data);
@@ -178,10 +155,8 @@ void DoomWheel::_draw_pit_outcome(float lost_time, float variance, ImVec2 win_ce
 					leading_pct - (i * step_size_pct));
 
 			outcome_dots[car_segments-1] = outcome_dots[0];
-			//static ExampleAppLog my_log;
 			for (int i = 0; i < car_segments; i++)
 				printf("%d: x:%.2f y:%.2f\n", i, outcome_dots[i].x, outcome_dots[i].y);
-			//my_log.Draw("title");
 
 			ImGui::GetForegroundDrawList()->AddPolyline(outcome_dots, car_segments, 
 				IM_COL32(175, 95, 3, (b_transparent) ? 180 : 255), ImDrawFlags_None, 2);

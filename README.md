@@ -1,7 +1,15 @@
 # KevS
-Fuel-Calculator, Car-Overview and some Strategy-Overview
 A nice and clean tool to help racing.
-Still in developement. New features will be a more enhance Fuelcalculator and new windows like a Relative and/or Standings.
+Overview of the cars currently on track with current pitstops and laptimes.
+Still in developement. New features will be added.
+- Next up:
+  - Database-Client
+  - Database-Connection
+  - Time tracking of all cars in micro-sectors
+- Planned features
+  - Strategy recomendations
+  - Standing
+  - Fuel-Level streaming
 
 ## Licence
 The projcet is licenced under GNU GPL-3.0-or-later.
@@ -20,8 +28,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 # Used Tools
 * [Official iRacing-SDK](https://members.iracing.com/jforum/posts/list/1470675.page)
-* [Crow](https://github.com/CrowCpp/Crow)
-* [Tauri](https://github.com/tauri-apps/tauri)
+* [Dear ImGui](https://github.com/ocornut/imgui)
+* [ImPlot](https://github.com/epezent/implot)
+* [imspinner](https://github.com/dalerank/imspinner)
+* [libpqxx](https://github.com/jtv/libpqxx)
 
 ## iRacing-SDK
 Files and libraries are used from the official iRacing-SDK. Source is not provided. You can download the official source-code from the offical iRacing.com-forum.
