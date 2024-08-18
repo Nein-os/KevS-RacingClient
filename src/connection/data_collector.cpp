@@ -13,7 +13,7 @@ int IKevS_DataCollector::get_amnt_of_teams()
 	int ret = 0;
 	for (int i = 0; i < MAX_TEAMS_IN_SESSION; i++) {
 		KevS_Team *team = current_session->get_team(i);
-		assert(team == nullptr);
+		assert(team != nullptr);
 		if (team->is_initialized())
 			ret++;
 	}

@@ -1,14 +1,14 @@
 #include "ui/UI_Handler.h"
 #include "ui/DoomWheel.h"
 #include "ui/Settings.h"
+#include "ui/DBClient.h"
 
 //#define IMSPINNER_DEMO
-#define TESTING_IR
+//#define TESTING_IR
 //#define IMGUI_DEMO
 
 #include "imgui.h"
 #include <math.h>
-//#include "CarWrapper.h"
 #include "imspinner.h"
 #include "irsdk_client.h"
 #include "defines.h"
@@ -41,7 +41,7 @@ struct ExampleAppLog
 	}
 };
 
-void UI_Handler::RenderWholeUI(ImFont *font, IKevS_DataCollector *data)
+void UI_Handler::RenderWholeUI(ImFont *font, IKevS_DataCollector *data, GeneralSettings *gen_settings, DoomSettings *doom_settings)
 {
 	static bool opt_fullscreen = true;
 	static bool opt_padding = false;
@@ -78,7 +78,7 @@ void UI_Handler::RenderWholeUI(ImFont *font, IKevS_DataCollector *data)
 	// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
 	if (!opt_padding)
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	ImGui::Begin("KevS", nullptr, window_flags);
+	ImGui::Begin("KevS-Test", nullptr, window_flags);
 	if (!opt_padding)
 		ImGui::PopStyleVar();
 
@@ -92,47 +92,10 @@ void UI_Handler::RenderWholeUI(ImFont *font, IKevS_DataCollector *data)
 		ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 	}
-
-	/*if (ImGui::BeginMenuBar())
-	{
-		if (ImGui::BeginMenu("Options"))
-		{
-			// Disabling fullscreen would allow the window to be moved to the front of other windows,
-			// which we can't undo at the moment without finer window depth/z control.
-			ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
-			ImGui::MenuItem("Padding", NULL, &opt_padding);
-			ImGui::Separator();
-
-			if (ImGui::MenuItem("Flag: NoDockingOverCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingOverCentralNode) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingOverCentralNode; }
-			if (ImGui::MenuItem("Flag: NoDockingSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingSplit) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingSplit; }
-			if (ImGui::MenuItem("Flag: NoUndocking", "", (dockspace_flags & ImGuiDockNodeFlags_NoUndocking) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoUndocking; }
-			if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoResize; }
-			if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar; }
-			if (ImGui::MenuItem("Flag: PassthruCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0, opt_fullscreen)) { dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode; }
-			ImGui::Separator();
-			ImGui::EndMenu();
-		}
-
-		ImGui::EndMenuBar();
-	}*/
-
-	static int main_segments = 64;
-	static int car_segments = 15;
-	static int car_radius = 15;
-	static int car_font_size = 12;
-	static float lost_time = 30.0f;
-	static float lost_time_variance = 2.0f;
-	static int selected_numbering = 0;
-	static const char* number_items[] = { "Car-Number", "Class Position", "Overall Position" };
-	static bool show_self_class_only = false;
-	static bool b_outcome_transparent = true;
-	static bool b_outcome_on_top = true;
-	static bool b_outcome_visible = true;
-	static bool b_settings_collapsed = false;
 	
-	//ImGui::Begin("Viewport");
-	DoomWheel::RenderUI(font, data);
-	/*Settings::RenderUI(font);
-	ImGui::End();*/
+	DoomWheel::RenderUI(font, data, doom_settings);
+	Settings::RenderUI(font, gen_settings, doom_settings, data->is_connected());
+	if (gen_settings->b_db_client_show)
+		DBClient::RenderUI(font);
 	ImGui::End();
 }

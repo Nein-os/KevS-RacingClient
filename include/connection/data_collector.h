@@ -33,7 +33,10 @@ public:
 	virtual int get_class_colour_b(int) = 0;
 	virtual int get_class(int) = 0;
 	virtual int get_own_class() = 0;
+	virtual float get_own_track_pos() = 0;
 
 	virtual bool is_on_pitroad(int) = 0;
+	virtual float get_best_lap_time(int) = 0;
+	virtual float get_self_best_lap_time() = 0;
 };
 #endif // DATA_COLLECTOR_H

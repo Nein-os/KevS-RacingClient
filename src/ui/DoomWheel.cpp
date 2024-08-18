@@ -42,58 +42,8 @@ struct ExampleAppLog
 	}
 };
 
-void DoomWheel::RenderUI(ImFont *font, IKevS_DataCollector *data)
+void DoomWheel::RenderUI(ImFont *font, IKevS_DataCollector *data, DoomSettings *doom_wheel)
 {
-	static bool opt_fullscreen = true;
-	static bool opt_padding = false;
-	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-
-	// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
-	// because it would be confusing to have two docking targets within each others.
-	ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-	if (opt_fullscreen)
-	{
-		const ImGuiViewport* viewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(viewport->WorkPos);
-		ImGui::SetNextWindowSize(viewport->WorkSize);
-		ImGui::SetNextWindowViewport(viewport->ID);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-	}
-	else
-	{
-		dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
-	}
-
-	// When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background
-	// and handle the pass-thru hole, so we ask Begin() to not render a background.
-	if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-		window_flags |= ImGuiWindowFlags_NoBackground;
-
-	// Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-	// This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
-	// all active windows docked into it will lose their parent and become undocked.
-	// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
-	// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
-	if (!opt_padding)
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	ImGui::Begin("KevS-Teest", nullptr, window_flags);
-	if (!opt_padding)
-		ImGui::PopStyleVar();
-
-	if (opt_fullscreen)
-		ImGui::PopStyleVar(2);
-
-	// Submit the DockSpace
-	ImGuiIO& io = ImGui::GetIO();
-	if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
-	{
-		ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
-	}
-
 	/*if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu("Options"))
@@ -116,60 +66,46 @@ void DoomWheel::RenderUI(ImFont *font, IKevS_DataCollector *data)
 
 		ImGui::EndMenuBar();
 	}*/
-
-	static int main_segments = 64;
-	static int car_segments = 15;
-	static int car_radius = 15;
-	static int car_font_size = 12;
-	static float lost_time = 30.0f;
-	static float lost_time_variance = 2.0f;
-	static int selected_numbering = 0;
-	static const char* number_items[] = { "Car-Number", "Class Position", "Overall Position" };
-	static bool show_self_class_only = false;
-	static bool b_outcome_transparent = true;
-	static bool b_outcome_on_top = true;
-	static bool b_outcome_visible = true;
-	static bool b_settings_collapsed = false;
 	
 	ImGui::Begin("DoomWheel - Viewport");
 	ImVec2 win_pos = ImGui::GetWindowPos();
 	ImVec2 win_size = ImGui::GetWindowSize();
-	ImVec2 win_center = calc_center(win_pos, win_size);
-	float radius = calc_radius(win_size);
+	ImVec2 win_center = _calc_center(win_pos, win_size);
+	float radius = _calc_radius(win_size);
 	ImGui::GetForegroundDrawList()->AddCircle(win_center, radius,
-		IM_COL32(150, 150, 150, 255), main_segments, 3);
+		IM_COL32(150, 150, 150, 255), doom_wheel->main_segments, 3);
 	ImVec2 sf_line_tl = ImVec2(win_center.x - 2, win_center.y - radius - 10);
 	ImVec2 sf_line_br = ImVec2(win_center.x + 2, win_center.y - radius + 13);
 	ImGui::GetForegroundDrawList()->AddRectFilled(sf_line_tl, sf_line_br, IM_COL32(215, 0, 0, 255));
 	// TODO
-	if (b_outcome_visible && !b_outcome_on_top) 
-		draw_pit_outcome(lost_time, lost_time_variance, win_center, radius, car_radius, car_segments,
-			b_outcome_transparent, data);
+	if (doom_wheel->b_outcome_visible && !doom_wheel->b_outcome_on_top) 
+		_draw_pit_outcome(doom_wheel->lost_time, doom_wheel->lost_time_variance, win_center, radius, doom_wheel->car_radius, doom_wheel->car_segments,
+			doom_wheel->b_outcome_transparent, data);
 			
 	for (int i = 0; i < MAX_TEAMS_IN_SESSION; i++) {
 		// TODO: Check if driver is in class and print if needed
 		// TODO: get_car_pos leads to crash is_connected is fine
-		if (data->get_car_pos(i) > 0 && (!show_self_class_only || data->get_class(i) == data->get_own_class())) {
-			ImVec2 car_pos = calc_car_position(win_center, radius, data->get_car_pos(i));
+		if (data->get_car_pos(i) > 0 && (!doom_wheel->show_self_class_only || data->get_class(i) == data->get_own_class())) {
+			ImVec2 car_pos = _calc_car_position(win_center, radius, data->get_car_pos(i));
 			if (data->is_on_pitroad(i))
-				ImGui::GetForegroundDrawList()->AddCircle(car_pos, (float)car_radius,
+				ImGui::GetForegroundDrawList()->AddCircle(car_pos, (float)doom_wheel->car_radius,
 					IM_COL32(data->get_class_colour_r(i), 
 						data->get_class_colour_g(i),
 						data->get_class_colour_b(i),
 						255),
-					car_segments, 2);
+					doom_wheel->car_segments, 2);
 			else
-				ImGui::GetForegroundDrawList()->AddCircleFilled(car_pos, (float)car_radius,
+				ImGui::GetForegroundDrawList()->AddCircleFilled(car_pos, (float)doom_wheel->car_radius,
 					IM_COL32(data->get_class_colour_r(i),
 						data->get_class_colour_g(i),
 						data->get_class_colour_b(i), 
 						255), 
-					car_segments);
+					doom_wheel->car_segments);
 
-			ImVec2 car_text_pos = ImVec2(car_pos.x - car_font_size * .5,
-				car_pos.y - car_font_size * .5);
+			ImVec2 car_text_pos = ImVec2(car_pos.x - doom_wheel->car_font_size * .5,
+				car_pos.y - doom_wheel->car_font_size * .5);
 			char* number = (char*)calloc(4, sizeof(char));
-			switch (selected_numbering) {
+			switch (doom_wheel->selected_numbering) {
 			case 1:
 				sprintf(number, "%d", data->get_class_place(i));
 				break;
@@ -179,17 +115,17 @@ void DoomWheel::RenderUI(ImFont *font, IKevS_DataCollector *data)
 			default:
 				number = data->get_number(i);
 			}
-			ImGui::GetForegroundDrawList()->AddText(font, car_font_size, car_text_pos, 
+			ImGui::GetForegroundDrawList()->AddText(font, doom_wheel->car_font_size, car_text_pos, 
 				data->is_on_pitroad(i) ? IM_COL32(255, 255, 255, 255) : IM_COL32(0, 0, 0, 255), 
 				number);
 		}
 	}
-	/*if (b_outcome_visible && b_outcome_on_top)
-		draw_pit_outcome(lost_time, lost_time_variance, win_center, radius, car_radius, car_segments,
-			b_outcome_transparent, irsdk);
-	ImGui::SetCursorScreenPos(calc_right_bottom_corner(win_pos, win_size));
-	if (ImGui::SmallButton((b_settings_collapsed) ? "<" : ">")) 
-		b_settings_collapsed = (b_settings_collapsed) ? false : true;*/
+	if (doom_wheel->b_outcome_visible && doom_wheel->b_outcome_on_top)
+		_draw_pit_outcome(doom_wheel->lost_time, doom_wheel->lost_time_variance, win_center, radius, doom_wheel->car_radius, doom_wheel->car_segments,
+			doom_wheel->b_outcome_transparent, data);
+	/*ImGui::SetCursorScreenPos(_calc_right_bottom_corner(win_pos, win_size));
+	if (ImGui::SmallButton((doom_wheel->b_settings_collapsed) ? "<" : ">")) 
+		doom_wheel->b_settings_collapsed = (doom_wheel->b_settings_collapsed) ? false : true;*/
 	
 	ImGui::End();
 
@@ -197,25 +133,29 @@ void DoomWheel::RenderUI(ImFont *font, IKevS_DataCollector *data)
 #ifdef IMGUI_DEMO
 	ImGui::ShowDemoWindow();
 #endif
-
-	ImGui::End();
 }
 
-void DoomWheel::draw_pit_outcome(float lost_time, float variance, ImVec2 win_center, 
+void DoomWheel::_draw_pit_outcome(float lost_time, float variance, ImVec2 win_center, 
 	int radius, int car_radius, int car_segments, bool b_transparent, 
 	IKevS_DataCollector *data)
 {
-	/*if (lost_time > 0.f && CarWrapper::get_cartrackpos(irsdk, irsdk->get_player_id()) > 0.f) {
+	if (lost_time > 0.f && 
+		#if KEVS_USAGE_TYPE == IRACING_USAGE
+			data->get_own_track_pos()
+		#else 
+			0 // TODO
+		#endif
+		 > 0.f) {
 		if (variance > 0.f) {
-			float trailing_pct = irsdk->get_pct_of_pit_outcome(lost_time + variance);
-			float leading_pct = irsdk->get_pct_of_pit_outcome(lost_time - variance);
+			float trailing_pct = _calc_pct_of_pit_outcome(lost_time + variance, data->get_self_best_lap_time());
+			float leading_pct = _calc_pct_of_pit_outcome(lost_time - variance, data->get_self_best_lap_time());
 			ImVec2 *outcome_dots = (ImVec2*)calloc(car_segments, sizeof(ImVec2));
 			int amnt_dots_around = (car_segments - 4) / 2;
 			float step_size_pct;
 
 			// First cutted border
-			outcome_dots[0] = calc_car_position(win_center, radius - car_radius, trailing_pct);
-			outcome_dots[1] = calc_car_position(win_center, radius + car_radius, trailing_pct);
+			outcome_dots[0] = _calc_car_position(win_center, radius - car_radius, trailing_pct);
+			outcome_dots[1] = _calc_car_position(win_center, radius + car_radius, trailing_pct);
 
 			// Calc dots till secound cutted border
 			if (leading_pct < trailing_pct) {
@@ -227,14 +167,14 @@ void DoomWheel::draw_pit_outcome(float lost_time, float variance, ImVec2 win_cen
 				step_size_pct = (leading_pct - trailing_pct) / amnt_dots_around;
 
 			for (int i = 0; i < amnt_dots_around; i++) 
-				outcome_dots[i + 2] = calc_car_position(win_center, radius + car_radius, 
+				outcome_dots[i + 2] = _calc_car_position(win_center, radius + car_radius, 
 					trailing_pct + (i * step_size_pct));
 
-			outcome_dots[2 + amnt_dots_around] = calc_car_position(win_center, radius + car_radius, leading_pct);
-			outcome_dots[3 + amnt_dots_around] = calc_car_position(win_center, radius - car_radius, leading_pct);
+			outcome_dots[2 + amnt_dots_around] = _calc_car_position(win_center, radius + car_radius, leading_pct);
+			outcome_dots[3 + amnt_dots_around] = _calc_car_position(win_center, radius - car_radius, leading_pct);
 			// Calc dots till first cutted border back
 			for (int i = 0; i < amnt_dots_around; i++)
-				outcome_dots[i + 4 + amnt_dots_around] = calc_car_position(win_center, radius - car_radius, 
+				outcome_dots[i + 4 + amnt_dots_around] = _calc_car_position(win_center, radius - car_radius, 
 					leading_pct - (i * step_size_pct));
 
 			outcome_dots[car_segments-1] = outcome_dots[0];
@@ -249,32 +189,37 @@ void DoomWheel::draw_pit_outcome(float lost_time, float variance, ImVec2 win_cen
 			free(outcome_dots);
 		}
 		else {
-			float lost_pct = irsdk->get_pct_of_pit_outcome(lost_time);
-			ImVec2 outcome_pos = calc_car_position(win_center, radius, lost_pct);
+			float lost_pct = _calc_pct_of_pit_outcome(lost_time, data->get_self_best_lap_time());
+			ImVec2 outcome_pos = _calc_car_position(win_center, radius, lost_pct);
 			ImGui::GetForegroundDrawList()->AddCircleFilled(outcome_pos, car_radius,
 				IM_COL32(175, 95, 3, (b_transparent) ? 180 : 255), car_segments);
 		}
-	}*/
+	}
 }
 
-ImVec2 DoomWheel::calc_center(ImVec2 pos, ImVec2 size)
+ImVec2 DoomWheel::_calc_center(ImVec2 pos, ImVec2 size)
 {
 	return ImVec2(pos.x + size.x * .5f, pos.y + size.y * .5f);
 }
 
-ImVec2 DoomWheel::calc_right_bottom_corner(ImVec2 pos, ImVec2 size)
+ImVec2 DoomWheel::_calc_right_bottom_corner(ImVec2 pos, ImVec2 size)
 {
 	return ImVec2(pos.x + size.x - 25, pos.y + size.y - 25);
 }
 
-float DoomWheel::calc_radius(ImVec2 size)
+float DoomWheel::_calc_radius(ImVec2 size)
 {
 	return ((size.x > size.y) ? size.y : size.x) * .4f;
 }
 
-ImVec2 DoomWheel::calc_car_position(ImVec2 pos, float radius, float track_pos)
+ImVec2 DoomWheel::_calc_car_position(ImVec2 pos, float radius, float track_pos)
 {
 	float degree = 2 * track_pos * (float)PI;
 	return ImVec2(sin(degree) * radius + pos.x,
 		cos(degree) * -radius + pos.y);
+}
+
+float DoomWheel::_calc_pct_of_pit_outcome(float time, float ref)
+{
+	return (ref > 0) ? time / ref : 0.f;
 }

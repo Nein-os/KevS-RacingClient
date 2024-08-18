@@ -13,6 +13,8 @@ KevS_iRacing_Collector::KevS_iRacing_Collector() : IKevS_DataCollector()
 	cvar_car_position = irsdkCVar("CarIdxLapDistPct");
 	cvar_car_place = irsdkCVar("CarIdxPosition");
 	cvar_car_class_place = irsdkCVar("CarIdxClassPosition");
+	cvar_player_id = irsdkCVar("PlayerCarIdx");
+	cvar_car_is_on_pitroad = irsdkCVar("CarIdxOnPitRoad");
 
 	_reset();
 }
@@ -393,15 +395,30 @@ int KevS_iRacing_Collector::get_class_colour_b(int idx)
 }
 int KevS_iRacing_Collector::get_class(int)
 {
-	return 0;
+	return 0; // TODO
 }
 int KevS_iRacing_Collector::get_own_class()
 {
-	return 0;
+	return 0; // TODO
 }
-bool KevS_iRacing_Collector::is_on_pitroad(int)
+bool KevS_iRacing_Collector::is_on_pitroad(int idx)
 {
-	return 0;
+	return VALIDATE_BOOL(cvar_car_is_on_pitroad, idx);
+}
+
+float KevS_iRacing_Collector::get_own_track_pos()
+{
+	return get_car_pos(cvar_player_id.getInt());
+}
+
+float KevS_iRacing_Collector::get_best_lap_time(int idx)
+{
+	return .0f; // TODO
+}
+
+float KevS_iRacing_Collector::get_self_best_lap_time()
+{
+	return get_best_lap_time(cvar_player_id.getInt());
 }
 
 void KevS_iRacing_Collector::_reset()

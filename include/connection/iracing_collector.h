@@ -5,6 +5,7 @@
 #include "irsdk_client.h"
 
 #define VALIDATE_INT(a,b) ((b >= 0 && b < MAX_TEAMS_IN_SESSION) ? a.getInt(b) : 0)
+#define VALIDATE_BOOL(a,b) ((b >= 0 && b < MAX_TEAMS_IN_SESSION) ? a.getBool(b) : 0)
 
 enum yaml_state {
 	space,
@@ -34,8 +35,8 @@ private:
 	irsdkCVar cvar_car_position;
 	irsdkCVar cvar_car_place;
 	irsdkCVar cvar_car_class_place;
-	//irsdkCVar cvar_car_position;
-	//irsdkCVar cvar_car_position;
+	irsdkCVar cvar_player_id;
+	irsdkCVar cvar_car_is_on_pitroad;
 
 	void _fill_drivers_in_team() override;
 	void _fill_teams() override;
@@ -68,8 +69,11 @@ public:
 	virtual int get_class_colour_b(int) override;
 	virtual int get_class(int) override;
 	virtual int get_own_class() override;
+	virtual float get_own_track_pos() override;
 
 	virtual bool is_on_pitroad(int) override;
+	virtual float get_best_lap_time(int) override;
+	virtual float get_self_best_lap_time() override;
 };
 
 #endif // KEVS_IRACING_COLLECTOR_H

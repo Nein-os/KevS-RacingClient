@@ -27,6 +27,7 @@
 #include "ui/UI_Handler.h"
 #include "connection/data_collector.h"
 #include "connection/iracing_collector.h"
+#include "datatypes/doom_settings.h"
 
 // Volk headers
 #ifdef IMGUI_IMPL_VULKAN_USE_VOLK
@@ -498,6 +499,24 @@ int main(int, char**)
 	bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+	static DoomSettings doom_settings;
+	static GeneralSettings gen_settings;
+
+	doom_settings.main_segments = 64;
+	doom_settings.car_segments = 15;
+	doom_settings.car_radius = 15;
+	doom_settings.car_font_size = 12;
+	doom_settings.lost_time = 30.0f;
+	doom_settings.lost_time_variance = 2.0f;
+	doom_settings.selected_numbering = 0;
+	doom_settings.show_self_class_only = false;
+	doom_settings.b_outcome_transparent = true;
+	doom_settings.b_outcome_on_top = true;
+	doom_settings.b_outcome_visible = true;
+	doom_settings.b_settings_collapsed = false;
+
+	gen_settings.b_db_client_show = false;
+
 	// Main loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -524,7 +543,7 @@ int main(int, char**)
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		if (data_collector)
-			UI_Handler::RenderWholeUI(main_font, data_collector);
+			UI_Handler::RenderWholeUI(main_font, data_collector, &gen_settings, &doom_settings);
 
 		// Rendering
 		ImGui::Render();
